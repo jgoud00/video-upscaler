@@ -1,0 +1,52 @@
+# Byte-compiled / optimized
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+*.egg
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Data & checkpoints (large files — never commit)
+data/
+checkpoints/pretrained/
+checkpoints/finetuned/
+*.pth
+*.pkl
+*.onnx
+*.pt
+
+# Logs & experiment outputs
+logs/
+runs/
+tb_logs/
+wandb/
+results/
+
+# Jupyter
+.ipynb_checkpoints/
+notebooks/*.html
+
+# Misc
+*.log
+*.tmp
+.env

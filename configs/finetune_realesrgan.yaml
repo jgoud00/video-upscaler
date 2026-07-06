@@ -1,0 +1,43 @@
+# Real-ESRGAN fine-tuning config — inherits from base.yaml
+_base_: base.yaml
+
+task: super_resolution
+experiment_name: finetune_realesrgan_x4plus
+
+data:
+  train_dir: data/train
+  val_dir: data/val
+  patch_size: 128      # Spatial dimension of LR crop (HR will be 4x)
+  sequence_length: 3   # 9-channel input for temporal awareness
+  batch_size: 4        # Optimized for 6GB VRAM (approx 4GB usage)
+  num_workers: 4       # Increased for DataLoader efficiency
+
+freeze:
+  freeze_strategy: partial
+  num_frozen_blocks: 11  # freeze first 11 of 23 RRDB blocks
+
+checkpoint:
+  pretrained_path: checkpoints/pretrained/RealESRGAN_x4plus.pth
+  save_every_n_steps: 500
+
+optimizer:
+  name: adamw
+  lr: 2.0e-4             # generator LR (discriminator will use 0.1× this)
+  weight_decay: 1.0e-4
+  betas: [0.9, 0.99]
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 2  # Effective batch size of 8 (4 * 2)
+  d_update_interval: 2   # Only update Discriminator every 2 steps
+
+scheduler:
+  total_steps: 5000
+  warmup_steps: 200
+
+log_every_n_steps: 1
+
+loss:
+  pixel_weight: 1.0
+  perceptual_weight: 1.0
+  gan_weight: 0.1
+
+gradient_checkpointing: true  # RRDBNet activations fit in 6GB at 128 patch

@@ -1,0 +1,69 @@
+# Base configuration — shared defaults for all fine-tuning tasks.
+# Task-specific configs inherit from this via `_base_: base.yaml`.
+
+task: super_resolution  # overridden per task
+experiment_name: base_defaults
+seed: 42
+
+device:
+  gpu_id: 0
+  use_amp: true
+  amp_dtype: float16
+
+data:
+  train_dir: data/train
+  val_dir: data/val
+  patch_size: 128
+  batch_size: 1
+  num_workers: 2
+  sequence_length: 3
+  augment_flip: true
+  augment_rotate: true
+
+degradation:
+  downscale_range: [2.0, 4.0]
+  noise_sigma_range: [0.0, 25.0]
+  jpeg_quality_range: [30, 95]
+  blur_kernel_size: 21
+  blur_sigma_range: [0.1, 3.0]
+  enable_second_order: true
+
+freeze:
+  freeze_strategy: partial
+  num_frozen_blocks: 11
+  freeze_discriminator_early: true
+
+lora:
+  enabled: false
+  rank: 8
+  alpha: 16.0
+
+optimizer:
+  name: adamw
+  lr: 1.0e-4
+  weight_decay: 0.01
+  betas: [0.9, 0.999]
+  gradient_accumulation_steps: 4
+  max_grad_norm: 1.0
+
+scheduler:
+  name: cosine
+  warmup_steps: 500
+  total_steps: 50000
+  min_lr: 1.0e-7
+
+checkpoint:
+  save_dir: checkpoints/finetuned
+  save_every_n_steps: 1000
+  keep_last_n: 3
+
+loss:
+  pixel_weight: 1.0
+  perceptual_weight: 1.0
+  gan_weight: 0.1
+  temporal_weight: 0.0
+
+gradient_checkpointing: false
+log_dir: logs
+log_every_n_steps: 50
+val_every_n_steps: 500

@@ -1,0 +1,67 @@
+# NAFNet (Deblurring) Configuration
+# Optimized for 6GB VRAM GPUs (e.g. RTX 3050)
+
+task: "deblurring"
+experiment_name: "nafnet_deblur_v1"
+seed: 42
+log_dir: "logs"
+log_every_n_steps: 10
+
+device:
+  gpu_id: 0
+  use_amp: true
+  amp_dtype: "float16"
+
+data:
+  train_dir: "data/train"
+  val_dir: "data/val"
+  batch_size: 2          # Kept extremely small due to NAFNet parameter size
+  num_workers: 4
+  patch_size: 128        # 128x128 patches for training
+
+degradation:
+  # For deblurring, we heavily emphasize blur and noise over downsampling
+  blur_prob: 0.9
+  blur_kernel_size: 11
+  blur_sigma: [0.5, 4.0]
+  
+  noise_prob: 0.8
+  noise_range: [1, 20]
+  
+  jpeg_prob: 0.8
+  jpeg_range: [40, 95]
+  
+  downsample_prob: 0.1   # Minimal downsampling, the image is mostly native resolution but blurred
+
+freeze:
+  freeze_strategy: "none"
+  num_frozen_blocks: 0   # NAFNet handles fine-tuning well without freezing, but relies on Gradient Checkpointing
+
+lora:
+  enabled: true
+  rank: 8
+  alpha: 16.0
+  target_modules: ["c1", "c2", "c3"]  # NAFNet specific conv targets (1x1 and 3x3)
+
+loss:
+  pixel_weight: 1.0
+  perceptual_weight: 0.0 # Omitted for VRAM safety and because NAFNet prefers pure L1
+  gan_weight: 0.0
+
+optimizer:
+  name: "adamw"
+  lr: 0.0001
+  weight_decay: 0.01
+  betas: [0.9, 0.99]
+  max_grad_norm: 1.0
+  gradient_accumulation_steps: 4
+
+scheduler:
+  name: "cosine"
+  total_steps: 50000
+
+checkpoint:
+  save_dir: "checkpoints"
+  save_every_n_steps: 1000
+  keep_last_n: 3
+  pretrained_path: "checkpoints/pretrained/NAFNet-width64.pth"

@@ -1,0 +1,61 @@
+# GFPGAN (Face Enhancement) Configuration
+task: "face_enhancement"
+experiment_name: "gfpgan_v1"
+seed: 42
+log_dir: "logs"
+log_every_n_steps: 10
+
+device:
+  gpu_id: 0
+  use_amp: true
+  amp_dtype: "float16"
+
+data:
+  train_dir: "data/train_faces"
+  val_dir: "data/val_faces"
+  batch_size: 4
+  num_workers: 4
+  patch_size: 512  # GFPGAN typically operates on 512x512 aligned faces
+
+degradation:
+  blur_prob: 0.8
+  blur_kernel_size: 21
+  blur_sigma: [0.2, 10.0]
+  noise_prob: 0.8
+  noise_range: [1, 20]
+  jpeg_prob: 0.8
+  jpeg_range: [30, 95]
+  downsample_prob: 0.8
+
+freeze:
+  freeze_strategy: "blocks"
+  num_frozen_blocks: 10 # Freeze the StyleGAN2 generator base
+
+lora:
+  enabled: true
+  rank: 8
+  alpha: 16.0
+  target_modules: ["condition_scale", "condition_shift", "to_rgb"]
+
+loss:
+  pixel_weight: 1.0
+  perceptual_weight: 1.0
+  gan_weight: 0.0 # Dropped for 6GB VRAM
+
+optimizer:
+  name: "adam"
+  lr: 0.0002
+  weight_decay: 0.0
+  betas: [0.9, 0.99]
+  max_grad_norm: 0.0
+  gradient_accumulation_steps: 2
+
+scheduler:
+  name: "cosine"
+  total_steps: 400000
+
+checkpoint:
+  save_dir: "checkpoints"
+  save_every_n_steps: 5000
+  keep_last_n: 3
+  pretrained_path: "checkpoints/pretrained/GFPGANv1.4.pth"
